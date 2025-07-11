@@ -1,9 +1,11 @@
-// Enhanced query processing hook for Phase 2
-// This hook manages the query lifecycle and can be easily integrated with the backend LangGraph system
+// Enhanced query processing hook for Phase 3
+// This hook manages the query lifecycle with WebSocket simulation and error handling
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { api } from '@/lib/api'
 import { simulateQueryProcessing } from '@/lib/mock-data'
+import { useWebSocketSimulation } from '@/lib/websocket-simulation'
+import { useErrorHandler } from '@/lib/error-handler'
 import type { QueryRequest, QueryResponse } from '@/lib/api'
 import type { QueryTrace, ChatMessage, QueryType, SuggestedQuery } from '@/lib/types'
 
@@ -24,6 +26,27 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
   const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null)
   const [suggestedQueries, setSuggestedQueries] = useState<SuggestedQuery[]>([])
 
+  // Phase 3: WebSocket and error handling hooks
+  const { startQueryTracing, on, off } = useWebSocketSimulation()
+  const { executeWithRetry, createErrorMessage, handleError } = useErrorHandler()
+
+  // Phase 3: Set up real-time trace updates
+  useEffect(() => {
+    const handleTraceUpdate = (data: any) => {
+      if (data.data?.traces) {
+        setQueryTrace(data.data.traces)
+      }
+    }
+
+    on('node_progress', handleTraceUpdate)
+    on('query_complete', handleTraceUpdate)
+
+    return () => {
+      off('node_progress', handleTraceUpdate)
+      off('query_complete', handleTraceUpdate)
+    }
+  }, [on, off])
+
   const sendQuery = useCallback(async (
     message: string, 
     persona: string, 
@@ -38,14 +61,22 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
       setQueryType(detectedType)
       setEstimatedDuration(duration)
 
-      // Send query to API
-      const request: QueryRequest = {
-        message,
-        persona,
-        files
-      }
+      // Phase 3: Start real-time WebSocket tracing
+      await startQueryTracing(message, persona, detectedType)
 
-      const response = await api.sendQuery(request)
+      // Phase 3: Execute with retry logic
+      const response = await executeWithRetry(
+        async () => {
+          const request: QueryRequest = {
+            message,
+            persona,
+            files
+          }
+          return await api.sendQuery(request)
+        },
+        `query-${Date.now()}`,
+        { maxRetries: 3 }
+      )
 
       if (!response.success) {
         throw new Error(response.error || 'Query failed')
@@ -77,6 +108,10 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
     } catch (error) {
       console.error('Query processing error:', error)
       
+      // Phase 3: Use enhanced error handling
+      const errorContext = handleError(error, `query-${Date.now()}`)
+      const errorMessage = createErrorMessage(errorContext, 0)
+      
       // Mark current step as error
       setQueryTrace(prev => 
         prev.map(t => 
@@ -86,18 +121,12 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
         )
       )
 
-      // Return error message
-      return {
-        id: Date.now().toString(),
-        type: 'assistant',
-        content: 'Sorry, I encountered an error processing your query. Please try again.',
-        timestamp: new Date()
-      }
+      return errorMessage
 
     } finally {
       setIsProcessing(false)
     }
-  }, [])
+  }, [startQueryTracing, executeWithRetry, createErrorMessage, handleError])
 
   const clearTrace = useCallback(() => {
     setQueryTrace([])

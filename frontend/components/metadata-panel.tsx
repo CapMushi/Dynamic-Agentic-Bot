@@ -55,7 +55,7 @@ export function MetadataPanel({ metadata, onTogglePanel, citations = [], chunks,
               Metadata & Preview
             </h2>
             <div className="flex-1 flex justify-end">
-              <button
+              {/* <button
                 onClick={onTogglePanel}
                 className="p-2 rounded-full transition-all duration-200 hover:scale-110"
                 style={{ backgroundColor: "#2C2C2C" }}
@@ -67,7 +67,7 @@ export function MetadataPanel({ metadata, onTogglePanel, citations = [], chunks,
                 }}
               >
                 <Eye className="h-5 w-5" style={{ color: "#B0B0B0" }} />
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
