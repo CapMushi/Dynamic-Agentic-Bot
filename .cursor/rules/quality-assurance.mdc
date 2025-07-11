@@ -1,0 +1,33 @@
+# Quality Assurance Guidelines
+
+## Testing Requirements
+- Implement comprehensive testing for all components
+- Unit and integration testing for each phase
+- Performance testing and optimization
+- Security testing and audit
+
+## Code Quality
+- Use TypeScript for type safety
+- Implement proper error handling and recovery
+- Maintain code quality and documentation
+- Regular code reviews and refactoring
+
+## Performance Considerations
+- Optimize for large document sets
+- Implement proper caching strategies
+- Ensure responsive design across devices
+- Monitor and optimize query processing times
+
+## Accessibility
+- Ensure accessibility compliance for all UI components
+- Implement proper error handling and loading states
+- Create comprehensive component documentation
+
+## Security
+- Implement proper authentication and security measures
+- Conduct security audit and penetration testing
+- Ensure system reliability and stability
+description:
+globs:
+alwaysApply: false
+---

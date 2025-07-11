@@ -1,0 +1,31 @@
+# Query Processing Guidelines
+
+## Query Types
+- Mathematical: Stock price trends, moving averages, thresholds
+- Factual: Specific document-based questions
+- Conversational: Multi-step, suggestion-driven dialogs
+
+## Processing Flow
+Query: "Tell me the Moving Average of MSFT from March to May 2024"
+- Router → DBNode → MathNode → AnswerFormatter → UI
+- Suggested Follow-up: "When did MSFT cross its 200-day MA in 2024?"
+
+Query: "What clause handles data breach retention?"
+- Router → DocNode → AnswerFormatter → UI
+- Response includes page number and screenshot
+- Suggested Follow-up: "Are there penalties for breach of NDA clauses?"
+
+## Accuracy Requirements
+- Vector DB (Pinecone) stores chunk content and metadata
+- On match, response includes answer, exact page number, and screenshot
+- Mathematical operations offloaded to dedicated Python nodes
+- Document-based queries served from indexed vector stores
+
+## Metadata Integration
+- Include page numbers and screenshots in responses
+- Store metadata (page number, image of chunk, title, section)
+- Implement proper citation system
+description:
+globs:
+alwaysApply: false
+---

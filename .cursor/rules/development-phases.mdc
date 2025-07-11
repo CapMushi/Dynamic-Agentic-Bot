@@ -1,0 +1,47 @@
+# Development Phases
+
+## Phase 1: Frontend Foundation
+- Three-panel responsive layout
+- File upload system for PDFs and CSV files
+- Basic chat interface with message history
+- Persona selector with three AI personas
+- Mock data infrastructure
+
+## Phase 2: Mock Data Integration
+- Mock API responses for all query types
+- Query processing flow visualization
+- Metadata display system
+- Suggested queries generation
+- Processing state management
+
+## Phase 3: Advanced UI Features
+- WebSocket simulation for real-time query tracing
+- LLM provider selection interface
+- Query history and persistence
+- Advanced error handling
+- Performance optimization
+
+## Phase 4: Backend Integration
+- LangGraph node implementation
+- Pinecone vector database integration
+- FastAPI backend with proper API endpoints
+- WebSocket implementation
+- OCR and PDF processing
+
+## Phase 5: Production Deployment
+- Production deployment configuration
+- Dynamic knowledge base expansion
+- Advanced query optimization
+- Monitoring and analytics
+- Security hardening
+
+## Phase 6: Testing & Polish
+- Comprehensive testing suite
+- Performance optimization
+- User experience polish
+- Documentation completion
+- Security audit
+description:
+globs:
+alwaysApply: false
+---

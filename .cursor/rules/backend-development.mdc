@@ -1,0 +1,38 @@
+# Frontend Development Guidelines
+
+## UI Layout Requirements
+- Three-panel responsive layout (Left/Center/Right)
+- Left Panel: Knowledge base sources and persona management
+- Center Panel: Chat interface, answer display, and suggested queries
+- Right Panel: Metadata display and PDF page preview
+
+## Component Structure
+- Use TypeScript for all components
+- Implement proper TypeScript interfaces for all data structures
+- Create reusable components for chat messages, file uploads, and panels
+- Build mock API service layer that can be easily replaced with real endpoints
+
+## State Management
+- Use Zustand or Redux for complex state management
+- Implement state machine for query processing flow
+- Handle loading states and error recovery properly
+
+## File Upload System
+- Support PDFs and CSV files
+- Implement client-side validation
+- Create mock processing responses for development
+
+## Mock Data Strategy
+- Create comprehensive mock responses for each node
+- Build mock PDFs with page numbers and screenshots
+- Simulate different query flows (math, document, conversational)
+- Use Mock Service Worker for API simulation
+
+## Real-time Features
+- Implement WebSocket simulation for query tracing
+- Show visual progression through all 8 nodes
+- Create real-time processing indicators
+description:
+globs:
+alwaysApply: false
+---

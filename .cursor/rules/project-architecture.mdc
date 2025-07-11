@@ -1,0 +1,36 @@
+# Dynamic Agentic Systems - Project Architecture
+
+## Dual Repository Structure
+This project follows a dual repository structure:
+- Frontend repository (separate)
+- Backend repository (separate)
+
+## Core System Components
+The system consists of 8 specialized LangGraph nodes:
+- Router Node: Intent classification and query routing
+- Doc Node: PDF processing with Pinecone vector search
+- DB Node: SQL/CSV data queries
+- Math Node: Computational operations
+- Persona Selector: LLM provider routing
+- Suggestion Node: Follow-up query generation
+- Answer Formatter: Metadata and screenshot integration
+- UI: Three-panel interface
+
+## Knowledge Base Strategy
+- Document KB: PDFs chunked and indexed in Pinecone with metadata
+- Database KB: Structured data (CSV/SQL) for financial time series
+- Hybrid approach: Combines vector search with traditional database queries
+
+## AI Personas
+Three specialized agents:
+- Financial Analyst: Math-heavy, stock analysis
+- Legal Advisor: Compliance, contract analysis
+- General Assistant: Mixed-domain queries
+
+## Technical Stack
+Backend: LangGraph, Pinecone, FastAPI, OCR
+Frontend: Next.js, Tailwind CSS/ShadCN, WebSocket
+description:
+globs:
+alwaysApply: false
+---

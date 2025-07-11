@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 12 12 12; /* #0C0C0C */
+    --foreground: 255 255 255; /* #FFFFFF */
+    --card: 26 31 28; /* #1A1F1C */
+    --card-foreground: 255 255 255; /* #FFFFFF */
+    --popover: 26 31 28; /* #1A1F1C */
+    --popover-foreground: 255 255 255; /* #FFFFFF */
+    --primary: 0 255 153; /* #00FF99 */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
+    --secondary: 44 44 44; /* #2C2C2C */
+    --secondary-foreground: 255 255 255; /* #FFFFFF */
+    --muted: 44 44 44; /* #2C2C2C */
+    --muted-foreground: 176 176 176; /* #B0B0B0 */
+    --accent: 0 255 153; /* #00FF99 */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
+    --destructive: 239 68 68; /* red-500 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
+    --border: 44 44 44; /* #2C2C2C */
+    --input: 16 16 16; /* #101010 */
+    --ring: 0 255 153; /* #00FF99 */
+    --radius: 0.5rem;
+    --chart-1: 0 255 153; /* #00FF99 */
+    --chart-2: 0 210 106; /* #00D26A */
+    --chart-3: 224 255 229; /* #E0FFE5 */
+    --chart-4: 176 176 176; /* #B0B0B0 */
+    --chart-5: 68 68 68; /* #444444 */
+  }
+
+  .dark {
+    --background: 12 12 12; /* #0C0C0C */
+    --foreground: 255 255 255; /* #FFFFFF */
+    --card: 26 31 28; /* #1A1F1C */
+    --card-foreground: 255 255 255; /* #FFFFFF */
+    --popover: 26 31 28; /* #1A1F1C */
+    --popover-foreground: 255 255 255; /* #FFFFFF */
+    --primary: 0 255 153; /* #00FF99 */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
+    --secondary: 44 44 44; /* #2C2C2C */
+    --secondary-foreground: 255 255 255; /* #FFFFFF */
+    --muted: 44 44 44; /* #2C2C2C */
+    --muted-foreground: 176 176 176; /* #B0B0B0 */
+    --accent: 0 255 153; /* #00FF99 */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
+    --destructive: 239 68 68; /* red-500 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
+    --border: 44 44 44; /* #2C2C2C */
+    --input: 16 16 16; /* #101010 */
+    --ring: 0 255 153; /* #00FF99 */
+    --chart-1: 0 255 153; /* #00FF99 */
+    --chart-2: 0 210 106; /* #00D26A */
+    --chart-3: 224 255 229; /* #E0FFE5 */
+    --chart-4: 176 176 176; /* #B0B0B0 */
+    --chart-5: 68 68 68; /* #444444 */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html, body {
+  background: #0C0C0C !important;
+}
+
+/* Custom scrollbar styles for dark theme */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #2c2c2c transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #2c2c2c;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #00ff99;
+}
+
+/* Remove default focus outlines and add custom ones */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #00ff99;
+  outline-offset: 2px;
+}
