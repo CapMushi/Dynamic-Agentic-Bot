@@ -127,7 +127,11 @@ export function PDFViewer({ file, initialPage = 1, onPageChange, className = "" 
             <ChevronLeft className="h-4 w-4" />
           </Button>
           
-          <Badge variant="outline" className="text-xs">
+          <Badge
+            variant="outline"
+            className="text-xs"
+            style={{ borderColor: 'rgb(0, 255, 153)', color: '#FFFFFF' }}
+          >
             {pageNumber} / {numPages}
           </Badge>
           
@@ -153,7 +157,11 @@ export function PDFViewer({ file, initialPage = 1, onPageChange, className = "" 
             <ZoomOut className="h-4 w-4" />
           </Button>
           
-          <Badge variant="outline" className="text-xs">
+          <Badge
+            variant="outline"
+            className="text-xs"
+            style={{ borderColor: 'rgb(0, 255, 153)', color: '#FFFFFF' }}
+          >
             {Math.round(scale * 100)}%
           </Badge>
           

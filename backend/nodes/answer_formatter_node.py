@@ -28,22 +28,12 @@ class AnswerFormatterNode(BaseNode):
         
         self.log_processing_step("Starting final response generation")
         
-        # Log the components that will be used to build the messages
-        system_prompt = input_data.get("system_message", """You are a helpful AI assistant specialized in analyzing documents and providing accurate, well-structured responses. Your goal is to:
+        # The system_prompt is now guaranteed to be provided by the persona_selector_node.
+        # The old default has been removed to avoid conflicts.
+        system_prompt = input_data.get("system_message")
+        if not system_prompt:
+            raise ValueError("System message is missing from the input data.")
 
-1. Carefully analyze the provided document context
-2. Extract relevant information that directly answers the user's query
-3. Synthesize the information into a clear, comprehensive response
-4. Use specific details and facts from the documents
-5. Maintain accuracy and cite relevant sources when possible
-
-Guidelines:
-- Focus on information that directly relates to the user's question
-- Provide specific details, numbers, and facts from the context
-- If the context doesn't contain sufficient information, clearly state this
-- Structure your response in a logical, easy-to-follow format
-- Use bullet points or numbered lists when appropriate for clarity""")
-        
         query = input_data.get("query", "")
         retrieved_chunks = input_data.get("retrieved_content", [])
 

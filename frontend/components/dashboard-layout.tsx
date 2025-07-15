@@ -453,20 +453,19 @@ export function DashboardLayout() {
             style={{ backgroundColor: "#1A1F1C", borderColor: "#2C2C2C" }}
           >
             <div className="h-full p-4 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold" style={{ color: "#FFFFFF" }}>
-                  Document Preview
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setIsRightPanelVisible(false)}
-                    style={{ color: "#B0B0B0" }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h2 className="text-lg font-bold" style={{ color: "#E0FFE5" }}>
+                  Metadata & Preview
+                </h2>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsRightPanelVisible(false)}
+                  style={{ color: "#B0B0B0" }}
+                  className="hover:bg-gray-700"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
               </div>
               
               <div className="h-full flex flex-col">

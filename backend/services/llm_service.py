@@ -23,22 +23,99 @@ class LLMService:
     
     def __init__(self):
         self.providers = {}
+        
+        # Base prompt with universal rules for all personas
+        self._base_prompt = """CRITICAL CITATION REQUIREMENT: You MUST use the format [Document X] to cite ANY information you use from the provided documents. This is mandatory for all document-based answers.
+            
+        CITATION STRATEGY:
+        - For specific queries (e.g., "What does the Architecture section say?"), cite ONLY the single most relevant document that contains the exact information requested.
+        - For general/summary queries (e.g., "What is this document about?"), you may cite multiple relevant documents.
+        - Always prioritize citing the document that contains the most specific and relevant information for the query.
+        
+        DOCUMENT/SECTION QUERY GUIDELINES:
+        - When users ask about CRUD operations, API endpoints, supported actions, or similar structured lists, search for the relevant section or heading in ANY provided document.
+        - If a section or heading is found, enumerate ALL items/operations listed under that heading.
+        - Do NOT just answer with the first item you find—list all relevant operations.
+        - When citing, always cite the full section or heading, not just a single line or snippet.
+        - If the document is structured with headings, prefer to cite the heading and the entire section content.
+
+        When documents are provided, only cite them if you actually use information from them to answer the question."""
+
+        # Persona-specific prompts, containing only role-specific instructions
         self.personas = {
             "Financial Analyst": {
-                "system_prompt": "You are a Financial Analyst AI assistant. You specialize in analyzing financial data, stock market trends, and providing investment insights. Focus on mathematical calculations, trend analysis, and data-driven recommendations.",
+                "system_prompt": """You are a professional financial advisor with expertise in:
+                - Stock market analysis and investment strategies
+                - Financial planning and portfolio management
+                - Economic trends and market indicators
+                - Risk assessment and mitigation
+                - Regulatory compliance and financial regulations
+                - Data analysis and CSV/stock data interpretation
+                
+                IMPORTANT: When CSV computation results are provided in the context, use them directly to answer questions. 
+                Do not provide vague responses - give specific, concrete answers based on the data provided.
+                
+                For example:
+                - If asked "what's the max price of X", look for the "max" value in the CSV statistics and state it directly
+                - If asked about averages, use the "mean" values from the data
+                - If asked about moving averages, use the specific MA values provided
+                
+                Always cite the specific data values when answering questions about stock prices, statistics, or trends.
+                Provide clear, actionable financial advice with appropriate disclaimers.
+                Always consider risk factors and recommend consulting with licensed professionals for specific investment decisions.
+                Use data-driven analysis when available and cite sources when possible.""",
                 "preferred_provider": "OpenAI"
             },
             "Legal Advisor": {
-                "system_prompt": "You are a Legal Advisor AI assistant. You specialize in legal document analysis, contract review, and compliance guidance. Focus on accurate citations, legal precedents, and regulatory compliance.",
+                "system_prompt": """You are a legal advisor with expertise in:
+                - Contract law and legal document analysis
+                - Corporate law and business regulations
+                - Intellectual property and compliance
+                - Risk assessment and legal implications
+                - Regulatory frameworks and legal precedents
+                
+                Provide general legal information and guidance, but always recommend consulting with qualified legal professionals for specific legal matters.
+                Clarify that you are not providing legal advice and that users should seek professional legal counsel for their specific situations.""",
                 "preferred_provider": "Claude"
             },
             "General Assistant": {
-                "system_prompt": "You are a General Assistant AI. You can help with various tasks including document analysis, data processing, and general inquiries. Provide balanced, informative responses.",
+                "system_prompt": """You are a knowledgeable assistant with broad expertise in:
+                - General knowledge and research
+                - Problem-solving and analysis
+                - Writing and communication
+                - Technology and tools
+                - Best practices and recommendations
+                - Data analysis and CSV/stock data interpretation
+                
+                IMPORTANT: When CSV computation results are provided in the context, use them directly to answer questions. 
+                Do not provide vague responses - give specific, concrete answers based on the data provided.
+                
+                For example:
+                - If asked "what's the max price of X", look for the "max" value in the CSV statistics and state it directly
+                - If asked about averages, use the "mean" values from the data
+                - If asked about moving averages, use the specific MA values provided
+                
+                Always cite the specific data values when answering questions about stock prices, statistics, or trends.
+                Be conversational yet professional, and always aim to be helpful and informative.""",
                 "preferred_provider": "DeepSeek"
             }
         }
         self._initialize_providers()
-    
+
+    def get_full_system_prompt(self, persona: str) -> Optional[str]:
+        """
+        Constructs the full system prompt by combining the base prompt
+        with the persona-specific prompt.
+        """
+        persona_config = self.personas.get(persona)
+        if not persona_config:
+            return None
+        
+        specific_prompt = persona_config.get("system_prompt", "")
+        
+        # Combine base prompt with the specific persona prompt
+        return f"{self._base_prompt}\n\n{specific_prompt}"
+
     def _initialize_providers(self):
         """Initialize LLM providers"""
         try:
@@ -76,13 +153,14 @@ class LLMService:
     async def generate_response(self, persona: str, query: str, context: Optional[Dict[str, Any]] = None) -> str:
         """Generate response using specified persona"""
         try:
-            # Get persona configuration
-            persona_config = self.personas.get(persona)
-            if not persona_config:
+            # Get the full, combined system prompt
+            system_prompt = self.get_full_system_prompt(persona)
+            if not system_prompt:
                 raise ValueError(f"Unknown persona: {persona}")
             
             # Get LLM provider
-            provider_name = persona_config["preferred_provider"]
+            persona_config = self.personas.get(persona, {})
+            provider_name = persona_config.get("preferred_provider")
             provider = self.providers.get(provider_name)
             
             if not provider:
@@ -90,9 +168,6 @@ class LLMService:
                 provider = next(iter(self.providers.values())) if self.providers else None
                 if not provider:
                     raise ValueError("No LLM providers available")
-            
-            # Prepare messages
-            system_prompt = persona_config["system_prompt"]
             
             # Add context if provided
             if context:
@@ -217,17 +292,18 @@ class LLMService:
             formatted_context.append(str(context["math_results"]))
         
         return "\n".join(formatted_context)
-    
+
     async def generate_suggested_queries(self, persona: str, current_query: str, context: Optional[Dict[str, Any]] = None) -> List[SuggestedQuery]:
         """Generate suggested follow-up queries"""
         try:
-            # Get persona configuration
-            persona_config = self.personas.get(persona)
-            if not persona_config:
+            # Get the full, combined system prompt
+            system_prompt = self.get_full_system_prompt(persona)
+            if not system_prompt:
                 return []
             
             # Get LLM provider
-            provider_name = persona_config["preferred_provider"]
+            persona_config = self.personas.get(persona, {})
+            provider_name = persona_config.get("preferred_provider")
             provider = self.providers.get(provider_name)
             
             if not provider:
@@ -247,7 +323,7 @@ class LLMService:
             """
             
             messages = [
-                SystemMessage(content=persona_config["system_prompt"]),
+                SystemMessage(content=system_prompt),
                 HumanMessage(content=suggestion_prompt)
             ]
             
@@ -300,15 +376,24 @@ class LLMService:
     async def classify_query_intent(self, query: str) -> Dict[str, Any]:
         """Classify query intent and type"""
         try:
+            logger.info("--- Query Intent Classification START ---")
+            logger.info(f"Classifying query: '{query}'")
             query_lower = query.lower()
-            
+
+            # Define keywords for clarity and debugging
+            math_keywords = ["calculate", "average", "trend", "moving", "math"]
+            factual_keywords = ["what", "clause", "section", "document", "page", "describe"]
+
             # Determine query type
-            if any(keyword in query_lower for keyword in ["calculate", "average", "trend", "moving", "math"]):
+            if any(keyword in query_lower for keyword in math_keywords):
                 query_type = "mathematical"
-            elif any(keyword in query_lower for keyword in ["what", "clause", "section", "document", "page"]):
+                logger.info(f"Classification result: 'mathematical' (matched one of: {math_keywords}).")
+            elif any(keyword in query_lower for keyword in factual_keywords):
                 query_type = "factual"
+                logger.info(f"Classification result: 'factual' (matched one of: {factual_keywords}).")
             else:
                 query_type = "conversational"
+                logger.info(f"Classification result: 'conversational' (no specific keywords matched in '{math_keywords}' or '{factual_keywords}').")
             
             # Determine required nodes
             required_nodes = ["router", "persona_selector", "answer_formatter"]
@@ -320,6 +405,9 @@ class LLMService:
             
             # Always add suggestion node
             required_nodes.append("suggestion")
+
+            logger.info(f"Determined query_type: '{query_type}', required_nodes: {required_nodes}")
+            logger.info("--- Query Intent Classification END ---")
             
             return {
                 "query_type": query_type,

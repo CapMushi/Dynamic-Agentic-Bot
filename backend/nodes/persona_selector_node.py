@@ -37,13 +37,12 @@ class PersonaSelectorNode(BaseNode):
         if not persona_info:
             raise ValueError(f"Unknown persona: {persona}")
             
-        # Create a system message for the persona
-        system_message = (
-            f"You are the {persona}, an expert in your field. "
-            f"Your role is to provide accurate, insightful responses based on the provided context. "
-            f"{persona_info.get('description', '')}"
-        )
-        
+        # Get the full, combined system message for the persona
+        system_message = llm_service.get_full_system_prompt(persona)
+        if not system_message:
+            # This should not happen if persona_info was found, but as a safeguard:
+            raise ValueError(f"Could not construct system message for persona: {persona}")
+
         self.log_processing_step("Persona system message created", f"Persona: {persona}")
         
         return {

@@ -152,13 +152,11 @@ class RealApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      // Map names to persona objects with id and name
-      const personas = (data.data || []).map((name: string, idx: number) => ({
-        id: name,
-        name,
-        provider: "Unknown",
+      // The backend now returns the full persona objects, so no mapping is needed.
+      // We just need to ensure the 'active' property is set for the first one.
+      const personas = (data.data || []).map((persona: any, idx: number) => ({
+        ...persona,
         active: idx === 0,
-        color: "#6B73FF"
       }));
       return {
         success: data.success,

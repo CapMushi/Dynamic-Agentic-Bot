@@ -55,33 +55,8 @@ export function MetadataPanel({ metadata, onTogglePanel, citations = [], chunks,
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col overflow-hidden" style={{ backgroundColor: "#1A1F1C" }}>
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex-1"></div>
-            <h2 className="text-xl font-bold flex-1 text-center" style={{ color: "#E0FFE5" }}>
-              Metadata & Preview
-            </h2>
-            <div className="flex-1 flex justify-end">
-              {/* <button
-                onClick={onTogglePanel}
-                className="p-2 rounded-full transition-all duration-200 hover:scale-110"
-                style={{ backgroundColor: "#2C2C2C" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#00FF99"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#2C2C2C"
-                }}
-              >
-                <Eye className="h-5 w-5" style={{ color: "#B0B0B0" }} />
-              </button> */}
-            </div>
-          </div>
-        </div>
-
         {/* Content Area */}
-        <div className="flex-1 flex flex-col px-4 pb-4 min-h-0">
+        <div className="flex-1 flex flex-col px-4 pb-4 pt-4 min-h-0">
           {/* Metadata Section */}
           <Card className="shadow-lg flex-shrink-0 mb-4" style={{ backgroundColor: "#1A1F1C", borderColor: "#2C2C2C" }}>
             <CardHeader className="pb-3">
@@ -310,14 +285,6 @@ export function MetadataPanel({ metadata, onTogglePanel, citations = [], chunks,
                   {/* Try to show PDF viewer first, then image, then text */}
                   {metadata.pdfUrl ? (
                     <div className="flex-1 flex flex-col min-h-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium" style={{ color: "#FFFFFF" }}>
-                          PDF Document
-                        </h4>
-                        <Badge variant="outline" className="text-xs">
-                          PDF View
-                        </Badge>
-                      </div>
                       <div className="flex-1 min-h-0 border rounded-lg" style={{ borderColor: "#2C2C2C" }}>
                         <ErrorBoundary
                           onError={() => setPdfError(true)}

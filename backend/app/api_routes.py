@@ -149,14 +149,30 @@ async def index_pdf_chunks(file_path: str, file_name: str):
         logger.error(f"Background indexing failed for {file_name}: {str(e)}")
 
 
-@api_router.get("/personas", response_model=ApiResponse[List[str]])
+@api_router.get("/personas", response_model=ApiResponse[List[PersonaConfig]])
 async def get_personas():
-    """Get available personas"""
+    """Get available personas with their full configuration"""
     try:
-        personas = ["Financial Analyst", "Legal Advisor", "General Assistant"]
-        
+        # Get full persona details from the LLM service
+        persona_configs = []
+        for name in llm_service.personas.keys():
+            info = llm_service.get_persona_info(name)
+            if info:
+                # Construct a PersonaConfig object. You might need to adjust this
+                # based on what get_persona_info returns and what PersonaConfig expects.
+                # This example assumes get_persona_info returns a dict with the necessary fields.
+                persona_configs.append(
+                    PersonaConfig(
+                        id=name,
+                        name=name,
+                        provider=info.get("preferred_provider", "Unknown"),
+                        active=False,  # Frontend will manage the active state
+                        color="#6B73FF" # A default color
+                    )
+                )
+
         return ApiResponse(
-            data=personas,
+            data=persona_configs,
             success=True
         )
         
