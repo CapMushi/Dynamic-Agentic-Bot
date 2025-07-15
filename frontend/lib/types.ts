@@ -1,5 +1,8 @@
 // Centralized Type Definitions for Dynamic Agentic Systems
-// These types align with the document specifications and can be extended in future phases
+// These types align with the backend API schemas and document specifications
+
+// Note: Backend returns datetime strings, frontend converts to Date objects
+// API responses are handled by the API layer which performs this conversion
 
 // Core AI Personas as defined in the project document
 export interface Persona {
@@ -101,6 +104,8 @@ export interface DocumentMetadata {
   previewUrl: string
   confidence?: number
   chunkId?: string // TODO: Add chunk identification in Phase 4
+  content?: string // For text-based preview
+  pdfUrl?: string // For PDF.js viewer
 }
 
 // Suggested queries for conversational flow

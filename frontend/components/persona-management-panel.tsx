@@ -79,9 +79,9 @@ export function PersonaManagementPanel({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {personas.map((persona) => (
+          {personas.map((persona, idx) => (
             <div
-              key={persona.id}
+              key={persona.id || idx}
               className="flex items-center justify-between p-3 rounded-lg"
               style={{ backgroundColor: "#2C2C2C", border: "1px solid #2C2C2C" }}
             >
@@ -110,30 +110,32 @@ export function PersonaManagementPanel({
           ))}
 
           {!showAddPersona ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full hover:text-white transition-colors bg-transparent"
-              style={{
-                backgroundColor: "#2C2C2C",
-                borderColor: "#2C2C2C",
-                color: "#B0B0B0",
-              }}
-              onClick={() => setShowAddPersona(true)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#00FF99"
-                e.currentTarget.style.borderColor = "#00FF99"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#2C2C2C"
-                e.currentTarget.style.borderColor = "#2C2C2C"
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add New Persona
-            </Button>
+            <div key="add-persona-button">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full hover:text-white transition-colors bg-transparent"
+                style={{
+                  backgroundColor: "#2C2C2C",
+                  borderColor: "#2C2C2C",
+                  color: "#B0B0B0",
+                }}
+                onClick={() => setShowAddPersona(true)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#00FF99"
+                  e.currentTarget.style.borderColor = "#00FF99"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#2C2C2C"
+                  e.currentTarget.style.borderColor = "#2C2C2C"
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add New Persona
+              </Button>
+            </div>
           ) : (
-            <div className="space-y-3 p-3 rounded-lg" style={{ backgroundColor: "#1A1F1C" }}>
+            <div key="add-persona-form" className="space-y-3 p-3 rounded-lg" style={{ backgroundColor: "#1A1F1C" }}>
               <div>
                 <Label htmlFor="persona-name" className="text-sm" style={{ color: "#B0B0B0" }}>
                   Persona Name
@@ -161,9 +163,9 @@ export function PersonaManagementPanel({
                     <SelectValue placeholder="Select provider" />
                   </SelectTrigger>
                   <SelectContent style={{ backgroundColor: "#1A1F1C", borderColor: "#444444" }}>
-                    <SelectItem value="OpenAI">OpenAI</SelectItem>
-                    <SelectItem value="Claude">Claude</SelectItem>
-                    <SelectItem value="DeepSeek">DeepSeek</SelectItem>
+                    <SelectItem key="openai" value="OpenAI">OpenAI</SelectItem>
+                    <SelectItem key="claude" value="Claude">Claude</SelectItem>
+                    <SelectItem key="deepseek" value="DeepSeek">DeepSeek</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

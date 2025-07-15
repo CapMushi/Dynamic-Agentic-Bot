@@ -13,38 +13,70 @@ import { useWebSocketSimulation } from "@/lib/websocket-simulation"
 import { storageService } from "@/lib/storage"
 import { useErrorHandler } from "@/lib/error-handler"
 import { usePerformanceOptimization } from "@/lib/performance"
-import { Eye, Settings, History, Zap } from "lucide-react"
+import { api } from "@/lib/api"
+import { logger } from "@/lib/logger"
+import { Eye, Settings, History } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Persona, ChatMessage, UploadedFile, DocumentMetadata, QueryHistory, LLMProvider } from "@/lib/types"
 
 export function DashboardLayout() {
-  // Phase 3: Enhanced state management with persistence
+  // Enhanced state management with backend sync
   const [personas, setPersonas] = useState<Persona[]>([
     { id: "1", name: "Financial Analyst", provider: "OpenAI", active: true, color: "#6B73FF" },
     { id: "2", name: "Legal Advisor", provider: "Claude", active: false, color: "#9B59B6" },
     { id: "3", name: "General Assistant", provider: "DeepSeek", active: false, color: "#00FF99" },
   ])
 
+  // Load personas from backend on component mount
+  useEffect(() => {
+    const loadPersonas = async () => {
+      try {
+        logger.info('Loading personas from backend', 'DASHBOARD')
+        const response = await api.getPersonas()
+        if (response.success && response.data.length > 0) {
+          setPersonas(response.data)
+          logger.info(`Loaded ${response.data.length} personas from backend`, 'DASHBOARD')
+        }
+      } catch (error) {
+        logger.error('Failed to load personas from backend', error, 'DASHBOARD')
+        // Keep default personas if backend fails
+      }
+    }
+    loadPersonas()
+  }, [])
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
       type: "assistant",
-      content: "Hello! I'm your AI assistant with enhanced Phase 3 capabilities including real-time tracing, query history, and LLM provider management. Upload some documents and select a persona to get started.",
+      content: "Hello! I'm your AI assistant connected to the backend with real-time LangGraph processing, document upload, and multi-persona support. Upload documents and select a persona to get started.",
       timestamp: new Date(),
     },
   ])
 
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([
-    { id: "1", name: "Financial_Report_Q3.pdf", type: "pdf", size: "2.4", uploadDate: new Date(), status: "completed" },
-    { id: "2", name: "Stock_Prices_2024.csv", type: "csv", size: "0.856", uploadDate: new Date(), status: "completed" },
-  ])
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+
+  // Load uploaded files from backend on component mount
+  useEffect(() => {
+    const loadUploadedFiles = async () => {
+      try {
+        // Note: This would need a backend endpoint to list uploaded files
+        // For now, we'll start with empty array and files will be added via upload
+        console.log('Ready to load files from backend when endpoint is available')
+      } catch (error) {
+        console.error('Failed to load uploaded files:', error)
+      }
+    }
+    loadUploadedFiles()
+  }, [])
 
   const [selectedMetadata, setSelectedMetadata] = useState<DocumentMetadata>({
-    title: "Financial_Report_Q3.pdf",
-    section: "Revenue Analysis",
-    page: 15,
+    title: "No document selected",
+    section: "Click on a citation or upload a document to see preview",
+    page: 0,
     previewUrl: "/placeholder.svg?height=400&width=300",
+    content: undefined
   })
 
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true)
@@ -162,29 +194,102 @@ export function DashboardLayout() {
     }
   }
 
-  const handlePersonaToggle = (personaId: string) => {
+  const handlePersonaToggle = async (personaId: string) => {
+    const selectedPersona = personas.find(p => p.id === personaId)
+    
+    // Update local state immediately for responsive UI
     setPersonas((prev) =>
       prev.map((p) => ({
         ...p,
         active: p.id === personaId,
       })),
     )
+
+    try {
+      // Sync with backend
+      if (selectedPersona) {
+        logger.personaSwitch(personaId, selectedPersona.name)
+        await api.updatePersona(selectedPersona.name, {
+          id: selectedPersona.id,
+          name: selectedPersona.name,
+          provider: selectedPersona.provider,
+          active: true,
+          color: selectedPersona.color,
+          apiKey: selectedPersona.apiKey,
+          model: selectedPersona.model
+        })
+      }
+    } catch (error) {
+      logger.error('Failed to update persona on backend', error, 'DASHBOARD')
+      // Could implement rollback here if needed
+    }
   }
 
-  const handleFileUpload = (files: FileList | null) => {
+  const handleFileUpload = async (files: FileList | null) => {
     if (!files) return
 
-    Array.from(files).forEach((file) => {
-      const newFile: UploadedFile = {
-        id: Date.now().toString(),
+    for (const file of Array.from(files)) {
+      // Create initial file entry with processing status
+      const tempFile: UploadedFile = {
+        id: `temp-${Date.now()}`,
         name: file.name,
         type: file.name.endsWith(".pdf") ? "pdf" : file.name.endsWith(".csv") ? "csv" : "database",
         size: `${(file.size / 1024 / 1024).toFixed(1)}`,
         uploadDate: new Date(),
         status: "processing"
       }
-      setUploadedFiles((prev) => [...prev, newFile])
-    })
+      
+      setUploadedFiles((prev) => [...prev, tempFile])
+
+      try {
+        // Upload file to backend
+        const response = await api.uploadFile(file)
+        
+        if (response.success) {
+          // Update file entry with backend response
+          const uploadedFile: UploadedFile = {
+            id: response.data.id,
+            name: response.data.name,
+            type: response.data.type,
+            size: tempFile.size,
+            uploadDate: tempFile.uploadDate,
+            status: response.data.status,
+            chunks: response.data.chunks,
+            indexed: response.data.indexed,
+            extractedSections: response.data.extractedSections
+          }
+          
+          setUploadedFiles((prev) => 
+            prev.map(f => f.id === tempFile.id ? uploadedFile : f)
+          )
+          
+          // Update selectedMetadata to show the uploaded document
+          const pdfUrl = uploadedFile.name.endsWith('.pdf') 
+            ? `http://localhost:8000/api/files/pdf/${uploadedFile.name}`
+            : undefined
+          
+          setSelectedMetadata({
+            title: uploadedFile.name,
+            section: uploadedFile.extractedSections?.[0] || "Document uploaded",
+            page: 1,
+            previewUrl: "/placeholder.svg?height=400&width=300",
+            pdfUrl: pdfUrl
+          })
+        } else {
+          // Handle upload error
+          setUploadedFiles((prev) => 
+            prev.map(f => f.id === tempFile.id ? { ...f, status: "error" } : f)
+          )
+          logger.error('File upload failed', response.error, 'UPLOAD')
+        }
+      } catch (error) {
+        // Handle network error
+        setUploadedFiles((prev) => 
+          prev.map(f => f.id === tempFile.id ? { ...f, status: "error" } : f)
+        )
+        logger.error('File upload error', error, 'UPLOAD')
+      }
+    }
   }
 
   // Phase 3: LLM Provider Management
@@ -341,29 +446,18 @@ export function DashboardLayout() {
           />
         </div>
 
-        {/* Right Panel - Enhanced Metadata + Performance */}
+        {/* Right Panel - Document Preview & Metadata */}
         {isRightPanelVisible && (
           <div
-            className="w-1/4 min-w-[320px] border-l transition-all duration-300 flex-shrink-0"
+            className="w-1/4 min-w-[320px] border-l transition-all duration-300 flex-shrink-0 h-full"
             style={{ backgroundColor: "#1A1F1C", borderColor: "#2C2C2C" }}
           >
-            <div className="h-full p-4">
+            <div className="h-full p-4 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold" style={{ color: "#FFFFFF" }}>
-                  Metadata & Performance
+                  Document Preview
                 </h3>
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const metrics = getMetrics()
-                      console.log('Current performance metrics:', metrics)
-                    }}
-                    style={{ color: "#B0B0B0" }}
-                  >
-                    <Zap className="h-4 w-4" />
-                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -375,47 +469,11 @@ export function DashboardLayout() {
                 </div>
               </div>
               
-              <div className="space-y-4">
+              <div className="h-full flex flex-col">
                 <MetadataPanel
                   metadata={selectedMetadata}
                   onTogglePanel={() => setIsRightPanelVisible(!isRightPanelVisible)}
                 />
-                
-                {/* Phase 3: Performance Metrics */}
-                <div className="border rounded-lg p-3" style={{ backgroundColor: "#2C2C2C", borderColor: "#444444" }}>
-                  <h4 className="text-sm font-medium mb-2" style={{ color: "#FFFFFF" }}>
-                    System Performance
-                  </h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span style={{ color: "#B0B0B0" }}>Queries Processed:</span>
-                      <span style={{ color: "#FFFFFF" }}>{queryHistory.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: "#B0B0B0" }}>LLM Providers:</span>
-                      <span style={{ color: "#FFFFFF" }}>{llmProviders.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: "#B0B0B0" }}>Active Retries:</span>
-                      <span style={{ color: "#FFFFFF" }}>{isRetrying('global') ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: "#B0B0B0" }}>Real-time Tracing:</span>
-                      <span style={{ color: "#00FF99" }}>Active</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Phase 3: WebSocket Status */}
-                <div className="border rounded-lg p-3" style={{ backgroundColor: "#2C2C2C", borderColor: "#444444" }}>
-                  <h4 className="text-sm font-medium mb-2" style={{ color: "#FFFFFF" }}>
-                    WebSocket Status
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#00FF99" }} />
-                    <span className="text-xs" style={{ color: "#B0B0B0" }}>Connected (Simulation)</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -433,18 +491,6 @@ export function DashboardLayout() {
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#00FF99")}
             >
               <Eye className="h-4 w-4 text-white" />
-            </Button>
-            
-            <Button
-              onClick={() => {
-                const metrics = getMetrics()
-                console.log('Performance metrics:', metrics)
-              }}
-              size="sm"
-              className="rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-              style={{ backgroundColor: "#6B73FF" }}
-            >
-              <Zap className="h-4 w-4 text-white" />
             </Button>
           </div>
         )}

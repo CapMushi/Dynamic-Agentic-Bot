@@ -70,11 +70,19 @@ export function ChatPanel({
   }
 
   const handleCitationClick = (citation: any) => {
+    // Generate PDF URL if it's a PDF document
+    const pdfUrl = citation.title.endsWith('.pdf') 
+      ? `http://localhost:8000/api/files/pdf/${citation.title}`
+      : undefined
+    
     onMetadataSelect({
       title: citation.title,
       section: citation.section,
       page: citation.page,
-      previewUrl: "/placeholder.svg?height=400&width=300",
+      previewUrl: citation.screenshot || "/placeholder.svg?height=400&width=300",
+      confidence: citation.confidence,
+      content: citation.content,
+      pdfUrl: pdfUrl
     })
   }
 

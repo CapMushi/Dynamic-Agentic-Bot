@@ -139,10 +139,13 @@ export const mockApi = {
   }
 }
 
-// Environment-based API switching
-// TODO: Implement actual API endpoints when backend is ready
+// API exports - using real backend API
+import { realApi } from './real-api'
+
 export const api = {
-  sendQuery: mockApi.sendQuery,
-  uploadFile: mockApi.uploadFile,
-  updatePersona: mockApi.updatePersona
+  sendQuery: realApi.sendQuery,
+  uploadFile: realApi.uploadFile,
+  updatePersona: realApi.updatePersona,
+  getPersonas: realApi.getPersonas,
+  healthCheck: realApi.healthCheck
 } 

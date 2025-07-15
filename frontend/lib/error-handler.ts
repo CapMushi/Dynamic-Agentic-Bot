@@ -54,9 +54,76 @@ export class ErrorHandler {
     storageService.saveErrorConfig(this.config)
   }
 
+  // Handle backend API specific errors
+  private handleBackendApiError(error: any, timestamp: Date): ErrorContext {
+    const status = error.status || error.response?.status
+    const data = error.data || error.response?.data
+    const errorMessage = data?.error || error.message
+
+    switch (status) {
+      case 400:
+        return {
+          type: ErrorType.VALIDATION,
+          message: errorMessage || 'Invalid request',
+          code: status,
+          details: error,
+          timestamp,
+          retryable: false,
+          userMessage: errorMessage || 'Invalid request format. Please check your input.'
+        }
+      case 401:
+        return {
+          type: ErrorType.AUTHENTICATION,
+          message: 'Authentication failed',
+          code: status,
+          details: error,
+          timestamp,
+          retryable: false,
+          userMessage: 'Authentication failed. Please check your API key configuration.'
+        }
+      case 429:
+        return {
+          type: ErrorType.API_LIMIT,
+          message: 'Rate limit exceeded',
+          code: status,
+          details: error,
+          timestamp,
+          retryable: true,
+          userMessage: 'Too many requests. Please wait a moment and try again.'
+        }
+      case 500:
+      case 502:
+      case 503:
+        return {
+          type: ErrorType.PROCESSING,
+          message: errorMessage || 'Server error',
+          code: status,
+          details: error,
+          timestamp,
+          retryable: true,
+          userMessage: errorMessage || 'Server error occurred. Please try again in a moment.'
+        }
+      default:
+        return {
+          type: ErrorType.UNKNOWN,
+          message: errorMessage || 'Unknown backend error',
+          code: status,
+          details: error,
+          timestamp,
+          retryable: false,
+          userMessage: errorMessage || 'An unexpected error occurred.'
+        }
+    }
+  }
+
   // Parse and classify errors
   parseError(error: any): ErrorContext {
     const timestamp = new Date()
+    
+    // Handle backend API response errors first
+    if (error.response || (error.status && typeof error.status === 'number')) {
+      return this.handleBackendApiError(error, timestamp)
+    }
     
     // Network errors
     if (error.name === 'NetworkError' || error.message?.includes('fetch')) {

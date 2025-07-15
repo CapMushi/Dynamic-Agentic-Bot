@@ -4,8 +4,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { api } from '@/lib/api'
 import { simulateQueryProcessing } from '@/lib/mock-data'
-import { useWebSocketSimulation } from '@/lib/websocket-simulation'
+import { useWebSocket } from '@/lib/websocket'
 import { useErrorHandler } from '@/lib/error-handler'
+import { logger } from '@/lib/logger'
 import type { QueryRequest, QueryResponse } from '@/lib/api'
 import type { QueryTrace, ChatMessage, QueryType, SuggestedQuery } from '@/lib/types'
 
@@ -26,15 +27,26 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
   const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null)
   const [suggestedQueries, setSuggestedQueries] = useState<SuggestedQuery[]>([])
 
-  // Phase 3: WebSocket and error handling hooks
-  const { startQueryTracing, on, off } = useWebSocketSimulation()
+  // Real WebSocket and error handling hooks
+  const { startQueryTracing, on, off } = useWebSocket()
   const { executeWithRetry, createErrorMessage, handleError } = useErrorHandler()
 
-  // Phase 3: Set up real-time trace updates
+  // Set up real-time trace updates from backend
   useEffect(() => {
     const handleTraceUpdate = (data: any) => {
       if (data.data?.traces) {
         setQueryTrace(data.data.traces)
+      } else if (data.data?.trace) {
+        // Handle individual trace updates
+        setQueryTrace(prev => {
+          const newTrace = data.data.trace
+          const existing = prev.find(t => t.id === newTrace.id)
+          if (existing) {
+            return prev.map(t => t.id === newTrace.id ? newTrace : t)
+          } else {
+            return [...prev, newTrace]
+          }
+        })
       }
     }
 
@@ -52,19 +64,20 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
     persona: string, 
     files?: string[]
   ): Promise<ChatMessage | null> => {
+    const startTime = Date.now()
     setIsProcessing(true)
     setQueryTrace([])
 
     try {
       // Analyze query before processing
-      const { queryType: detectedType, estimatedDuration: duration } = simulateQueryProcessing(message, persona)
+      const { queryType: detectedType, estimatedDuration: estimatedDuration } = simulateQueryProcessing(message, persona)
       setQueryType(detectedType)
-      setEstimatedDuration(duration)
+      setEstimatedDuration(estimatedDuration)
 
-      // Phase 3: Start real-time WebSocket tracing
+      // Start real-time WebSocket tracing
       await startQueryTracing(message, persona, detectedType)
 
-      // Phase 3: Execute with retry logic
+      // Execute with retry logic
       const response = await executeWithRetry(
         async () => {
           const request: QueryRequest = {
@@ -103,12 +116,27 @@ export function useQueryProcessing(): UseQueryProcessingReturn {
         processingTime: response.data.processingTime
       }
 
+      const duration = Date.now() - startTime
+      logger.queryComplete(duration, true)
+      logger.performance('query_processing', duration, { 
+        messageLength: message.length, 
+        persona, 
+        hasFiles: !!files?.length 
+      })
+
       return chatMessage
 
     } catch (error) {
-      console.error('Query processing error:', error)
+      const duration = Date.now() - startTime
+      logger.queryError(error)
+      logger.performance('query_processing', duration, { 
+        messageLength: message.length, 
+        persona, 
+        hasFiles: !!files?.length,
+        error: true 
+      })
       
-      // Phase 3: Use enhanced error handling
+      // Use enhanced error handling
       const errorContext = handleError(error, `query-${Date.now()}`)
       const errorMessage = createErrorMessage(errorContext, 0)
       
