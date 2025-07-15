@@ -147,5 +147,7 @@ export const api = {
   uploadFile: realApi.uploadFile,
   updatePersona: realApi.updatePersona,
   getPersonas: realApi.getPersonas,
-  healthCheck: realApi.healthCheck
+  healthCheck: realApi.healthCheck,
+  testBackendConnection: realApi.testBackendConnection,
+  testPdfEndpoint: realApi.testPdfEndpoint
 } 

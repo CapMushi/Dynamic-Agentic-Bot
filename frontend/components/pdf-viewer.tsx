@@ -1,31 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-
-// Dynamically import PDF.js components to avoid SSR issues
-const Document = dynamic(
-  () => import('react-pdf').then((mod) => mod.Document),
-  { ssr: false }
-)
-
-const Page = dynamic(
-  () => import('react-pdf').then((mod) => mod.Page),
-  { ssr: false }
-)
-
-// Set up PDF.js worker in useEffect to avoid SSR issues
-const usePDFJS = () => {
-  useEffect(() => {
-    // Import PDF.js configuration
-    import('@/lib/pdf-config').catch((error) => {
-      console.error('Failed to load PDF.js configuration:', error)
-    })
-  }, [])
-}
 
 interface PDFViewerProps {
   file: string | File | null
@@ -41,31 +19,74 @@ export function PDFViewer({ file, initialPage = 1, onPageChange, className = "" 
   const [rotation, setRotation] = useState<number>(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [isClient, setIsClient] = useState<boolean>(false)
+  const [imageError, setImageError] = useState<boolean>(false)
 
-  // Initialize PDF.js
-  usePDFJS()
-
-  // Ensure we're on the client side
   useEffect(() => {
-    setIsClient(true)
-  }, [])
+    setPageNumber(initialPage)
+  }, [initialPage])
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages)
-    setLoading(false)
-    setError(null)
+  // Get filename from file path
+  const getFilename = (filePath: string): string => {
+    if (!filePath) return ''
+    const parts = filePath.split('/')
+    const filename = parts[parts.length - 1]
+    // Decode the filename if it's URL encoded
+    return decodeURIComponent(filename)
   }
 
-  const onDocumentLoadError = (error: Error) => {
-    setLoading(false)
-    setError(error.message)
+  // Detect number of pages by trying to load images
+  const detectNumPages = async (filename: string) => {
+    let pageCount = 0
+    let currentPage = 1
+    
+    while (true) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/files/preview/${encodeURIComponent(filename)}/${currentPage}`, {
+          method: 'HEAD'
+        })
+        
+        if (response.ok) {
+          pageCount = currentPage
+          currentPage++
+        } else {
+          break
+        }
+      } catch {
+        break
+      }
+    }
+    
+    return pageCount
   }
+
+  useEffect(() => {
+    if (file && typeof file === 'string') {
+      const filename = getFilename(file)
+      if (filename) {
+        setLoading(true)
+        setError(null)
+        
+        detectNumPages(filename).then(count => {
+          if (count > 0) {
+            setNumPages(count)
+            setLoading(false)
+          } else {
+            setError('No preview images found')
+            setLoading(false)
+          }
+        }).catch(err => {
+          setError('Failed to load preview')
+          setLoading(false)
+        })
+      }
+    }
+  }, [file])
 
   const changePage = (newPage: number) => {
     if (newPage >= 1 && newPage <= numPages) {
       setPageNumber(newPage)
       onPageChange?.(newPage)
+      setImageError(false)
     }
   }
 
@@ -73,16 +94,8 @@ export function PDFViewer({ file, initialPage = 1, onPageChange, className = "" 
   const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5))
   const rotate = () => setRotation(prev => (prev + 90) % 360)
 
-  // Show loading state during SSR or when PDF.js is not ready
-  if (!isClient) {
-    return (
-      <div className={`flex items-center justify-center h-full ${className}`}>
-        <div className="text-center">
-          <FileText className="h-16 w-16 mb-4 text-gray-400" />
-          <p className="text-gray-400">Loading PDF viewer...</p>
-        </div>
-      </div>
-    )
+  const handleImageError = () => {
+    setImageError(true)
   }
 
   if (!file) {
@@ -95,6 +108,9 @@ export function PDFViewer({ file, initialPage = 1, onPageChange, className = "" 
       </div>
     )
   }
+
+  const filename = typeof file === 'string' ? getFilename(file) : ''
+  const imageUrl = filename ? `http://localhost:8000/api/files/preview/${encodeURIComponent(filename)}/${pageNumber}` : ''
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
@@ -162,38 +178,44 @@ export function PDFViewer({ file, initialPage = 1, onPageChange, className = "" 
         </div>
       </div>
 
-      {/* PDF Content */}
+      {/* Image Content */}
       <div className="flex-1 overflow-auto flex items-center justify-center p-4">
         {loading && (
           <div className="text-center">
-            <p className="text-gray-400">Loading PDF...</p>
+            <p className="text-gray-400">Loading preview...</p>
           </div>
         )}
         
         {error && (
-          <div className="text-center">
-            <p className="text-red-400">Error loading PDF: {error}</p>
+          <div className="text-center max-w-md">
+            <p className="text-red-400 mb-2">Error loading preview:</p>
+            <p className="text-red-300 text-sm">{error}</p>
           </div>
         )}
         
-        {!loading && !error && (
-          <Document
-            file={file}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={<div className="text-gray-400">Loading document...</div>}
-            error={<div className="text-red-400">Failed to load PDF</div>}
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              rotate={rotation}
-              loading={<div className="text-gray-400">Loading page...</div>}
-              error={<div className="text-red-400">Failed to load page</div>}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          </Document>
+        {!loading && !error && imageUrl && (
+          <div className="flex items-center justify-center">
+            {imageError ? (
+              <div className="text-center">
+                <p className="text-red-400 mb-2">Failed to load page {pageNumber}</p>
+                <p className="text-red-300 text-sm">Image not found</p>
+              </div>
+            ) : (
+              <img
+                src={imageUrl}
+                alt={`PDF page ${pageNumber}`}
+                onError={handleImageError}
+                style={{
+                  transform: `scale(${scale}) rotate(${rotation}deg)`,
+                  transformOrigin: 'center',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain'
+                }}
+                className="shadow-lg"
+              />
+            )}
+          </div>
         )}
       </div>
     </div>

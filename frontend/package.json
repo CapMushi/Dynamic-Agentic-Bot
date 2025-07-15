@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
+    "copy-pdf-worker": "node copy-pdf-worker.js",
+    "build": "npm run copy-pdf-worker && next build",
+    "dev": "npm run copy-pdf-worker && next dev",
     "lint": "next lint",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "preview": "next build && next start"
+    "preview": "npm run copy-pdf-worker && next build && next start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

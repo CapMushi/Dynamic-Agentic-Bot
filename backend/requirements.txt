@@ -1,0 +1,50 @@
+# Backend Dependencies for Dynamic Agentic Systems
+# Phase 4: LangGraph Architecture Implementation
+
+# Core Framework
+fastapi>=0.104.0
+uvicorn>=0.24.0
+websockets>=12.0
+
+# LangGraph and LangChain
+langgraph
+langchain
+langchain-openai
+langchain-anthropic
+langchain-community
+langchain-pinecone
+
+# Vector Database
+pinecone>=7.0.0
+chromadb>=0.4.18
+
+# PDF Processing and OCR
+PyPDF2>=3.0.0
+pdf2image>=1.16.0
+pytesseract>=0.3.10
+Pillow>=10.0.0
+
+# Data Processing
+pandas>=2.2.0
+numpy>=1.26.0
+python-multipart>=0.0.6
+
+# Environment and Configuration
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# HTTP Client
+httpx>=0.25.0
+aiofiles>=23.2.0
+
+# Math and Scientific Computing
+scipy>=1.11.0
+scikit-learn>=1.3.0
+
+# Async and Concurrency
+# asyncio is part of Python standard library
+
+# Development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0 

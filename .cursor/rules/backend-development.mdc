@@ -1,38 +1,31 @@
-# Frontend Development Guidelines
+# Backend Development Guidelines
 
-## UI Layout Requirements
-- Three-panel responsive layout (Left/Center/Right)
-- Left Panel: Knowledge base sources and persona management
-- Center Panel: Chat interface, answer display, and suggested queries
-- Right Panel: Metadata display and PDF page preview
+## LangGraph Architecture
+- Implement all 8 nodes with proper state management
+- Router Node: Routes queries to correct node(s) based on intent classification
+- Doc Node: Uses Pinecone and OCR to retrieve documents with page number and image
+- DB Node: Runs SQL queries for historical data like prices
+- Math Node: Handles computation-heavy queries such as moving average calculations
+- Persona Selector: Routes request to appropriate LLM or persona backend
+- Suggestion Node: Generates follow-up query suggestions to maintain flow
+- Answer Formatter: Adds metadata and screenshot into final answer
 
-## Component Structure
-- Use TypeScript for all components
-- Implement proper TypeScript interfaces for all data structures
-- Create reusable components for chat messages, file uploads, and panels
-- Build mock API service layer that can be easily replaced with real endpoints
+## API Design
+- Create comprehensive API contracts that match frontend expectations
+- Implement proper error handling and recovery mechanisms
+- Use FastAPI for REST API endpoints
+- Implement WebSocket for real-time communication
 
-## State Management
-- Use Zustand or Redux for complex state management
-- Implement state machine for query processing flow
-- Handle loading states and error recovery properly
+## Data Processing
+- Implement vector database integration with Pinecone
+- Create document chunking and indexing system
+- Build OCR system for PDF screenshot extraction
+- Handle mathematical operations in dedicated Python nodes
 
-## File Upload System
-- Support PDFs and CSV files
-- Implement client-side validation
-- Create mock processing responses for development
+## Integration Strategy
+- Use environment variables to toggle between mock and real APIs
+- Implement service layer that can switch between mock and real data
+- Plan for gradual migration from mock to real data
+- Maintain API contract consistency throughout development
 
-## Mock Data Strategy
-- Create comprehensive mock responses for each node
-- Build mock PDFs with page numbers and screenshots
-- Simulate different query flows (math, document, conversational)
-- Use Mock Service Worker for API simulation
-
-## Real-time Features
-- Implement WebSocket simulation for query tracing
-- Show visual progression through all 8 nodes
-- Create real-time processing indicators
-description:
-globs:
 alwaysApply: false
----
