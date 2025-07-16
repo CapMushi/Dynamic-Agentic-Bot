@@ -233,34 +233,30 @@ export function MetadataPanel({ metadata, onTogglePanel, citations = [], chunks,
                   <FileText className="h-5 w-5" />
                   Document Preview
                 </span>
-                <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                <Dialog 
+                  open={isPreviewOpen} 
+                  onOpenChange={setIsPreviewOpen}
+                >
                   <DialogTrigger asChild>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="hover:text-white"
-                          style={{ color: "#B0B0B0" }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#2C2C2C"
-                            e.currentTarget.style.color = "#00FF99"
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent"
-                            e.currentTarget.style.color = "#B0B0B0"
-                          }}
-                        >
-                          <Maximize2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Expand preview</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:text-white"
+                      style={{ color: "#B0B0B0" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#2C2C2C"
+                        e.currentTarget.style.color = "#00FF99"
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent"
+                        e.currentTarget.style.color = "#B0B0B0"
+                      }}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
                   </DialogTrigger>
                   <DialogContent
-                    className="max-w-4xl max-h-[90vh]"
+                    className="max-w-6xl max-h-[90vh] w-full"
                     style={{ backgroundColor: "#1A1F1C", borderColor: "#2C2C2C" }}
                   >
                     <DialogHeader>
@@ -268,12 +264,22 @@ export function MetadataPanel({ metadata, onTogglePanel, citations = [], chunks,
                         {metadata.title} - Page {metadata.page}
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="flex justify-center">
-                      <img
-                        src={metadata.previewUrl || "/placeholder.svg"}
-                        alt={`Preview of ${metadata.title} page ${metadata.page}`}
-                        className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
-                      />
+                    <div className="h-[80vh]">
+                      {metadata.pdfUrl ? (
+                        <PDFViewer 
+                          file={metadata.pdfUrl}
+                          initialPage={metadata.page}
+                          className="h-full"
+                        />
+                      ) : (
+                        <div className="flex justify-center items-center h-full">
+                          <img
+                            src={metadata.previewUrl || "/placeholder.svg"}
+                            alt={`Preview of ${metadata.title} page ${metadata.page}`}
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                          />
+                        </div>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>

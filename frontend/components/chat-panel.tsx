@@ -98,7 +98,7 @@ export function ChatPanel({
             <Badge
               variant="secondary"
               className="flex items-center gap-2 text-white"
-              style={{ backgroundColor: "#00FF99" }}
+              style={{ backgroundColor: "#000000" }}
             >
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#00FF99" }} />
               {activePersona.name}
@@ -246,12 +246,8 @@ export function ChatPanel({
         {/* Input Area */}
         <div className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: "#2C2C2C" }}>
           <div className="flex-shrink-0">
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#1A1F1C" }}
-            >
-              <div className="w-3 h-3 border-2 border-gray-400 rounded-full border-t-transparent animate-spin"></div>
-            </div>
+            
+            
           </div>
 
           <div className="flex-1 min-w-0">
@@ -260,18 +256,14 @@ export function ChatPanel({
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask your AI assistant anything..."
-              className="min-h-[40px] resize-none border-0 bg-transparent p-0 focus:ring-0 focus:outline-none"
+              className="min-h-[40px] resize-none border-0 bg-transparent p-0 focus:ring-0 focus:outline-none placeholder:text-white"
               style={{
                 color: "#FFFFFF",
               }}
             />
           </div>
 
-          <div className="flex-shrink-0">
-            <Button variant="ghost" size="sm" className="p-1 h-auto hover:bg-transparent" style={{ color: "#B0B0B0" }}>
-              <Mic className="h-5 w-5" />
-            </Button>
-          </div>
+          
 
           <div className="flex-shrink-0">
             <Button
