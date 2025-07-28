@@ -1,5 +1,5 @@
-[Document ]
-Dynamic Agentic Systems – Reformatted Project Document
+
+Dynamic Agentic Systems 
 
 Overview
 This system enables:
